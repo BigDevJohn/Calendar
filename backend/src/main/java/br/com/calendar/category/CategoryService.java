@@ -1,5 +1,6 @@
 package br.com.calendar.category;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -10,6 +11,7 @@ import br.com.calendar.category.dto.CategoryRequestDTO;
 import br.com.calendar.category.dto.CategoryResponseDTO;
 import br.com.calendar.category.dto.CategoryUpdateDTO;
 import br.com.calendar.common.exception.ResourceNotFoundException;
+import br.com.calendar.task.TaskRepository;
 import br.com.calendar.user.User;
 import br.com.calendar.user.UserRepository;
 
@@ -17,12 +19,14 @@ import br.com.calendar.user.UserRepository;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final TaskRepository taskRepository;
     private final CategoryMapper categoryMapper;
     private final UserRepository userRepository;
 
-    public CategoryService(CategoryRepository categoryRepository, CategoryMapper categoryMapper,
+    public CategoryService(CategoryRepository categoryRepository, TaskRepository taskRepository, CategoryMapper categoryMapper,
                            UserRepository userRepository) {
         this.categoryRepository = categoryRepository;
+        this.taskRepository = taskRepository;
         this.categoryMapper = categoryMapper;
         this.userRepository = userRepository;
     }
@@ -56,4 +60,24 @@ public class CategoryService {
         categoryMapper.updateEntity(category, request);
         return categoryMapper.toResponse(categoryRepository.save(category));
     }
+
+    @Transactional
+    public void deleteCategory(String categoryId, String userId) {
+        Category category = getCategoryOwnedByUser(categoryId, userId);
+
+        checkCategoryHasNoTasks(categoryId);
+
+        category.setDeletedAt(Instant.now());
+        categoryRepository.save(category);
+    }
+
+    private void checkCategoryHasNoTasks(String categoryId) {
+        if (taskRepository.existsByCategory_IdAndDeletedAtIsNull(categoryId)) {
+            throw new IllegalStateException("Cannot delete category with associated tasks");
+        }
+    }
+
+
+
 }
+
