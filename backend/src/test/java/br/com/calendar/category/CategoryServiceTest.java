@@ -24,6 +24,7 @@ import org.springframework.security.access.AccessDeniedException;
 import br.com.calendar.category.dto.CategoryRequestDTO;
 import br.com.calendar.category.dto.CategoryResponseDTO;
 import br.com.calendar.category.dto.CategoryUpdateDTO;
+import br.com.calendar.common.exception.ResourceConflictException;
 import br.com.calendar.common.exception.ResourceNotFoundException;
 import br.com.calendar.task.TaskRepository;
 import br.com.calendar.user.User;
@@ -217,8 +218,7 @@ class CategoryServiceTest {
 
         categoryService.deleteCategory("cat_123", USER_ID);
 
-        assertTrue(category.getDeletedAt() != null);
-        verify(categoryRepository).save(category);
+        verify(categoryRepository).delete(category);
     }
 
     @Test
@@ -234,7 +234,7 @@ class CategoryServiceTest {
                 .thenReturn(Optional.of(category));
         when(taskRepository.existsByCategory_IdAndDeletedAtIsNull("cat_123")).thenReturn(true);
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
+        IllegalStateException exception = assertThrows(ResourceConflictException.class,
                 () -> categoryService.deleteCategory("cat_123", USER_ID));
 
         assertEquals("Cannot delete category with associated tasks", exception.getMessage());
