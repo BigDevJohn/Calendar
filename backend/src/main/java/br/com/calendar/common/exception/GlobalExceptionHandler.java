@@ -51,9 +51,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(e, problem, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Object> handleIllegalStateException(IllegalStateException e, WebRequest request) {
-        log.error("Illegal state", e);
+    @ExceptionHandler(ResourceConflictException.class)
+    public ResponseEntity<Object> handleResourceConflictException(ResourceConflictException e, WebRequest request) {
+        log.error("Resource conflict", e);
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
         return handleExceptionInternal(e, problem, new HttpHeaders(), HttpStatus.CONFLICT, request);

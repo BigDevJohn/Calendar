@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.calendar.category.dto.CategoryRequestDTO;
 import br.com.calendar.category.dto.CategoryResponseDTO;
 import br.com.calendar.category.dto.CategoryUpdateDTO;
+import br.com.calendar.common.exception.ResourceConflictException;
 import br.com.calendar.common.exception.ResourceNotFoundException;
 import br.com.calendar.task.TaskRepository;
 import br.com.calendar.user.User;
@@ -67,13 +68,12 @@ public class CategoryService {
 
         checkCategoryHasNoTasks(categoryId);
 
-        category.setDeletedAt(Instant.now());
-        categoryRepository.save(category);
+        categoryRepository.delete(category);
     }
 
     private void checkCategoryHasNoTasks(String categoryId) {
         if (taskRepository.existsByCategory_IdAndDeletedAtIsNull(categoryId)) {
-            throw new IllegalStateException("Cannot delete category with associated tasks");
+            throw new ResourceConflictException("Cannot delete category with associated tasks");
         }
     }
 
